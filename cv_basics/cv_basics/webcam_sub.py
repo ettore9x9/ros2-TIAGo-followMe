@@ -11,6 +11,7 @@ from sensor_msgs.msg import Image # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 import cv2 # OpenCV library
 import numpy as np
+from geometry_msgs.msg import PointStamped
  
 class ImageSubscriber(Node):
   """
@@ -27,10 +28,12 @@ class ImageSubscriber(Node):
     # from the video_frames topic. The queue size is 10 messages.
     self.subscription = self.create_subscription(
       Image, 
-      'TIAGo_Iron/kinect_color', 
+      'kinect_color', 
       self.listener_callback, 
       10)
     self.subscription # prevent unused variable warning
+
+    self.publisher_centroid = self.create_publisher(PointStamped, 'centroid', 1)
       
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
@@ -50,6 +53,7 @@ class ImageSubscriber(Node):
     """
     Callback function.
     """
+    msg = PointStamped()
     # Display the message on the console
     self.get_logger().info('Receiving video frame')
  
@@ -77,7 +81,12 @@ class ImageSubscriber(Node):
 
     for (x, y, w, h) in faces:
       cv2.rectangle(gray, (x, y), (x+w, y+h), (255, 0, 0), 2)
+      msg.header = data.header
+      msg.point.x = x+w/2
+      msg.point.y = y+h/2
+      self.publisher_centroid.publish(msg)
 
+    cv2.rectangle(gray, (int(msg.point.x),int(msg.point.y)), (int(msg.point.x)+1, int(msg.point.y)+1), (255, 0, 0), 2)
     # Write the output video 
     self.out.write(gray.astype('uint8'))
 
