@@ -21,6 +21,7 @@ class ImageSubscriber(Node):
     """
     Class constructor to set up the node
     """
+    
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
       
@@ -61,22 +62,11 @@ class ImageSubscriber(Node):
     current_frame = self.br.imgmsg_to_cv2(data)
 
     # resizing for faster detection
-    frame = cv2.resize(current_frame, (640, 480))
+    frame = cv2.resize(current_frame, (640, 480)) # righe x colonne
 
     # using a greyscale picture, also for faster detection
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
     
-    # detect people in the image
-    # returns the bounding boxes for the detected objects
-    # boxes, weights = self.hog.detectMultiScale(gray, winStride=(8,8))
-
-    # boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in boxes])
-
-    # for (xA, yA, xB, yB) in boxes:
-    #     # display the detected boxes in the colour picture
-    #     cv2.rectangle(gray, (xA, yA), (xB, yB),(0, 255, 0), 2)
-
-
     faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
 
     for (x, y, w, h) in faces:
@@ -87,6 +77,7 @@ class ImageSubscriber(Node):
       self.publisher_centroid.publish(msg)
 
     cv2.rectangle(gray, (int(msg.point.x),int(msg.point.y)), (int(msg.point.x)+1, int(msg.point.y)+1), (255, 0, 0), 2)
+
     # Write the output video 
     self.out.write(gray.astype('uint8'))
 

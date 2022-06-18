@@ -8,7 +8,7 @@ WorldInfo {
 Viewpoint {
   fieldOfView 0.5
   orientation -0.33457614318239864 0.00978008565104968 0.9423179688076895 3.020868963865702
-  position 19.29277151378073 -2.271443204764347 18.65346517804778
+  position 3.0913563121704644 -4.7588075567867945 3.775743053255717
   near 1
   follow "TIAGo Iron"
   followType "None"
@@ -660,6 +660,7 @@ TiagoIron {
     Kinect {
       translation -0.04 0.04 4.07848e-08
       rotation 1 0 0 -1.5707953071795862
+      maxRange 5
     }
     DEF camera Camera {
       translation 0 0.5 0
@@ -699,7 +700,7 @@ Solid {
             baseColor 0.6 0.6 0.6
             baseColorMap ImageTexture {
               url [
-                "/home/ettore/ros2_foxy_ws/src/tiagosim/obj/rp_mei_posed_001_dif_2k.jpg"
+                "/home/fra/sofar_ws/src/tiagosim/obj/rp_mei_posed_001_dif_2k.jpg"
               ]
             }
             roughness 1

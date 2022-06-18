@@ -5,11 +5,13 @@ from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Image
 import cv2 # OpenCV library
 import numpy as np
 from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import Point
 
 class DepthFinder(Node):
   """
   Create an ImageSubscriber class, which is a subclass of the Node class.
   """
+
   def __init__(self):
     """
     Class constructor to set up the node
@@ -18,6 +20,7 @@ class DepthFinder(Node):
     super().__init__('depth_finder')
 
     self.buffer = []
+    self.depth = Point()
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
@@ -78,14 +81,15 @@ class DepthFinder(Node):
 
             # resizing for faster detection
             frame = cv2.resize(current_frame, (640, 480))
-            depth_array = np.array(frame, dtype=np.float32)
-            len(depth_array)
-            for i in depth_array:
-                print(i)
-            #self.get_logger().info('depth = ' + str(frame[int(msg.point.x),int(msg.point.y)]))
 
-            #self.out.write(frame.astype('uint8'))
-            #cv2.imshow("camera2", frame)
+            # centroid coordinates
+            self.depth.x = msg.point.y
+            self.depth.y = msg.point.x
+            # centroid depth
+            self.depth.z = float(frame[int(msg.point.y), int(msg.point.x)])
+
+            self.get_logger().info('depth = ' + str(frame[int(msg.point.y),int(msg.point.x)]))
+
             return
 
         if msg_nsec > image_nsec:
@@ -98,15 +102,15 @@ def main(args=None):
   rclpy.init(args=args)
   
   # Create the node
-  image_subscriber = DepthFinder()
+  depth_finder = DepthFinder()
   
   # Spin the node so the callback function is called.
-  rclpy.spin(image_subscriber)
+  rclpy.spin(depth_finder)
   
   # Destroy the node explicitly
   # (optional - otherwise it will be done automatically
   # when the garbage collector destroys the node object)
-  image_subscriber.destroy_node()
+  depth_finder.destroy_node()
   
   # Shutdown the ROS client library for Python
   rclpy.shutdown()
