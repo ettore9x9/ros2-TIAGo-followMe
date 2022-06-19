@@ -7,8 +7,8 @@ WorldInfo {
 }
 Viewpoint {
   fieldOfView 0.5
-  orientation -0.3360510758928982 -0.018479314041413206 0.9416624604091341 3.040989132123108
-  position 16.6954269756471 -4.118083100292356 14.979035091444684
+  orientation -0.46569250880677376 -0.044533045855772335 0.8838253758905434 3.2271004828907692
+  position 17.01254113327313 -0.9866441053097761 25.47789011812007
   near 1
   follow "TIAGo Iron"
   followType "None"
@@ -37,24 +37,6 @@ CeilingLight {
   supportColor 0.533333 0.541176 0.521569
   pointLightIntensity 3
   pointLightCastShadows TRUE
-}
-CeilingLight {
-  translation -2.74 4.78 2.5
-  rotation 1 0 0 4.692820414042842e-06
-  name "ceiling light(5)"
-  bulbColor 0.913725 0.72549 0.431373
-  supportColor 0.533333 0.541176 0.521569
-  pointLightIntensity 3
-  castShadows FALSE
-}
-CeilingLight {
-  translation 0.87 0.31 2.5
-  rotation 1 0 0 4.692820414042842e-06
-  name "ceiling light(1)"
-  bulbColor 0.913725 0.72549 0.431373
-  supportColor 0.533333 0.541176 0.521569
-  pointLightIntensity 3
-  castShadows FALSE
 }
 CeilingLight {
   translation -2.74 -3.52 2.5
@@ -632,11 +614,6 @@ OfficeChair {
   rotation 7.19235e-09 4.15252e-09 1 -2.094395307179586
 }
 OfficeChair {
-  translation 1.53 3.94 0
-  rotation -2.3464099999870814e-06 -2.3464099999870814e-06 0.9999999999944944 -1.5707953071795862
-  name "office chair(1)"
-}
-OfficeChair {
   translation 1.48338 5.36388 0
   rotation 7.19235e-09 -5.5189e-09 1 1.83259
   name "office chair(2)"
@@ -653,14 +630,14 @@ OfficeChair {
 }
 TiagoIron {
   translation 0.520425 -4.7406 0.235038
-  rotation 0.0020243409943323434 -0.002630521292080933 -0.9999944911854618 -1.8335453071795866
+  rotation -0.0020243409943323434 0.002630521292080933 0.9999944911854618 1.83355
   controller "<extern>"
   supervisor TRUE
   cameraSlot [
     Kinect {
-      translation -0.04 0.04 4.07848e-08
-      rotation 1 0 0 -1.5707953071795862
-      maxRange 5
+      translation -0.0790591 0.070078 0.00220557
+      rotation -0.1294279597735375 0.9831056944488314 -0.1294279597735375 -1.5878253071795863
+      foot FALSE
     }
     DEF camera Camera {
       translation 0 0.5 0

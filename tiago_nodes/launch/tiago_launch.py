@@ -21,15 +21,29 @@ def generate_launch_description():
         executable='img_subscriber',
     )
 
+    depth_finder = Node(
+        package='tiago_nodes',
+        namespace='TIAGo_Iron',
+        executable='depth_finder',
+        prefix=["lxterminal -e"],
+    )
+
+    controller = Node(
+        package='tiago_nodes',
+        executable='controller',
+        prefix=["lxterminal -e"],
+    )
+
+    obstacle_avoidance = Node(
+        package='py_obstacle_avoidance',
+        executable='robot_controller',
+        prefix=["lxterminal -e"],
+    )
+
     return LaunchDescription([
         tiagosim,
         cv_basics,
-
-        
-        Node(
-             package='tiago_nodes',
-             namespace='TIAGo_Iron',
-             executable='depth_finder',
-             prefix=["lxterminal -e"],
-         ),
+        depth_finder,
+        controller,
+        obstacle_avoidance,
     ])

@@ -85,8 +85,8 @@ class DepthFinder(Node):
             frame = cv2.resize(current_frame, (640, 480))
 
             # centroid coordinates
-            self.ctrl_input.x = msg.point.y
-            self.ctrl_input.y = msg.point.x
+            self.ctrl_input.x = msg.point.x
+            self.ctrl_input.y = msg.point.y
             # centroid depth
             self.ctrl_input.z = float(frame[int(msg.point.y), int(msg.point.x)])
 
