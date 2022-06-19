@@ -26,9 +26,10 @@ def generate_launch_description():
         cv_basics,
 
         
-        # Node(
-        #     package='tiago_nodes',
-        #     namespace='TIAGo_Iron',
-        #     executable='depth_finder',
-        # ),
+        Node(
+             package='tiago_nodes',
+             namespace='TIAGo_Iron',
+             executable='depth_finder',
+             prefix=["lxterminal -e"],
+         ),
     ])

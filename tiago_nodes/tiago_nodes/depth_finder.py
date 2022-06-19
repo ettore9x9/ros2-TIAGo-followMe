@@ -20,7 +20,7 @@ class DepthFinder(Node):
     super().__init__('depth_finder')
 
     self.buffer = []
-    self.depth = Point()
+    self.ctrl_input = Point()
       
     # Create the subscriber. This subscriber will receive an Image
     # from the video_frames topic. The queue size is 10 messages.
@@ -35,6 +35,8 @@ class DepthFinder(Node):
       '/TIAGo_Iron/centroid', 
       self.centroid_cb, 
       10)
+
+    self.ctrl_publisher = self.create_publisher(Point, "control_msgs", 1)
       
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
@@ -83,10 +85,12 @@ class DepthFinder(Node):
             frame = cv2.resize(current_frame, (640, 480))
 
             # centroid coordinates
-            self.depth.x = msg.point.y
-            self.depth.y = msg.point.x
+            self.ctrl_input.x = msg.point.y
+            self.ctrl_input.y = msg.point.x
             # centroid depth
-            self.depth.z = float(frame[int(msg.point.y), int(msg.point.x)])
+            self.ctrl_input.z = float(frame[int(msg.point.y), int(msg.point.x)])
+
+            self.ctrl_publisher.publish(ctrl_input)
 
             self.get_logger().info('depth = ' + str(frame[int(msg.point.y),int(msg.point.x)]))
 
