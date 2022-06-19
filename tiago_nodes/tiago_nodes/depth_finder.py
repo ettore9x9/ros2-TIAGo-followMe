@@ -90,7 +90,7 @@ class DepthFinder(Node):
             # centroid depth
             self.ctrl_input.z = float(frame[int(msg.point.y), int(msg.point.x)])
 
-            self.ctrl_publisher.publish(ctrl_input)
+            self.ctrl_publisher.publish(self.ctrl_input)
 
             self.get_logger().info('depth = ' + str(frame[int(msg.point.y),int(msg.point.x)]))
 

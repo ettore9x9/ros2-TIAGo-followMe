@@ -29,8 +29,7 @@ setup(
         
         ('share/' + package_name + '/worlds', ['worlds/world2.wbt']),
         
-        
-        ('share/' + package_name + '/controllers', ['controllers/my_controller/my_controller.py']),
+        ('share/' + package_name + '/obj', ['obj/rp_mei_posed_001_dif_2k.jpg']),
     ],
     
     
