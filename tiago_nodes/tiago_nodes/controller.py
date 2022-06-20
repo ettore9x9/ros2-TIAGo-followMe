@@ -28,7 +28,7 @@ class Controller(Node):
 
     self.timer = self.create_timer(0.01, self.publisher_cmd)
 
-    self.pid_distance = PID(-2, 0, -4, setpoint=2)
+    self.pid_distance = PID(-1, 0, -2, setpoint=2)
     self.pid_orientation = PID(0.004, 0, 0.008, setpoint=320)
 
     self.msg = Twist()
