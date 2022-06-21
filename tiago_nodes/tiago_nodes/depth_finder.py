@@ -55,7 +55,7 @@ class DepthFinder(Node):
     Callback function.
     """
     # Display the message on the console
-    self.get_logger().info('Receiving range frame ' + str(len(self.buffer)))
+    # self.get_logger().info('Receiving range frame ' + str(len(self.buffer)))
 
     self.buffer.append(data)
 
@@ -68,7 +68,7 @@ class DepthFinder(Node):
     Callback function.
     """
     # Display the message on the console
-    self.get_logger().info('Receiving centroid')
+    # self.get_logger().info('Receiving centroid')
 
     msg_nsec = msg.header.stamp.nanosec + 1000000000 * msg.header.stamp.sec
  
@@ -92,7 +92,7 @@ class DepthFinder(Node):
 
             self.ctrl_publisher.publish(self.ctrl_input)
 
-            self.get_logger().info('depth = ' + str(frame[int(msg.point.y),int(msg.point.x)]))
+            self.get_logger().info('Centroid Depth = ' + str(round(self.ctrl_input.z, 4)) + ' [m]')
 
             return
 

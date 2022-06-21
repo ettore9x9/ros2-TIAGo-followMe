@@ -136,9 +136,9 @@ class Controller(Node):
     self.rightfront_dist = min(msg.ranges[625:660])
     self.front_dist = min(msg.ranges[320:340])
 
-    print("front dist = " + str(self.front_dist))
-    print("right front dist = " + str(self.rightfront_dist))
-    print("left fron dist = " + str(self.leftfront_dist))  
+    # print("front dist = " + str(self.front_dist))
+    # print("right front dist = " + str(self.rightfront_dist))
+    # print("left fron dist = " + str(self.leftfront_dist))  
    
     # Logic for following the wall
     # >d means no wall detected by that laser beam

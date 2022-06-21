@@ -58,7 +58,7 @@ class Controller(Node):
   		self.msg.angular.z = self.msg.angular.z * 0.8
 
   	self.cmd_vel_publisher.publish(self.msg)
-  	self.get_logger().info('orient err: ' + str(self.x - 320) + 'depth err: ' + str(self.depth - 2))
+  	self.get_logger().info('Control Errors [' + str(self.x - 320) +  ' [px], ' + str(round(self.depth - 2, 4)) + ' [m] ]')
 
 
 def main(args=None):

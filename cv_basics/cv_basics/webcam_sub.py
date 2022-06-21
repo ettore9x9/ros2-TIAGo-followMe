@@ -48,7 +48,8 @@ class ImageSubscriber(Node):
         15.,
         (640,480))
 
-    self.face_cascade = cv2.CascadeClassifier('./src/cv_basics/cv_basics/haarcascade_frontalface_alt2.xml')
+    self.face_cascade_front = cv2.CascadeClassifier('./src/cv_basics/cv_basics/haarcascade_frontalface_alt2.xml')
+    self.face_cascade_profile = cv2.CascadeClassifier('./src/cv_basics/cv_basics/haarcascade_profile.xml')
 
   def listener_callback(self, data):
     """
@@ -56,7 +57,7 @@ class ImageSubscriber(Node):
     """
     msg = PointStamped()
     # Display the message on the console
-    self.get_logger().info('Receiving video frame')
+    # self.get_logger().info('Receiving video frame')
  
     # Convert ROS Image message to OpenCV image
     current_frame = self.br.imgmsg_to_cv2(data)
@@ -67,7 +68,10 @@ class ImageSubscriber(Node):
     # using a greyscale picture, also for faster detection
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
     
-    faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+    faces = self.face_cascade_front.detectMultiScale(gray, 1.1, 4)
+
+    if len(faces) == 0 :
+      faces = self.face_cascade_profile.detectMultiScale(gray, 1.1, 4)
 
     for (x, y, w, h) in faces:
       cv2.rectangle(gray, (x, y), (x+w, y+h), (255, 0, 0), 2)
@@ -75,6 +79,7 @@ class ImageSubscriber(Node):
       msg.point.x = x+w/2
       msg.point.y = y+h/2
       self.publisher_centroid.publish(msg)
+      self.get_logger().info('Centroid Pixel Coordinates = [' + str(msg.point.x) + ', ' + str(msg.point.y) + ']')
 
     cv2.rectangle(gray, (int(msg.point.x),int(msg.point.y)), (int(msg.point.x)+1, int(msg.point.y)+1), (255, 0, 0), 2)
 
