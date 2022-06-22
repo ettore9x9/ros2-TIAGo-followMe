@@ -67,6 +67,14 @@ def generate_launch_description():
         arguments=['joint_state_broadcaster'] + controller_manager_timeout,
     )
 
+    joint_trajectory_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner.py',
+        output='screen',
+        prefix=controller_manager_prefix,
+        arguments=['joint_trajectory_controller'] + controller_manager_timeout,
+    )
+
     tiago_driver = Node(
         package='webots_ros2_driver',
         executable='driver',
@@ -139,6 +147,7 @@ def generate_launch_description():
         ),
         joint_state_broadcaster_spawner,
         diffdrive_controller_spawner,
+        joint_trajectory_controller_spawner,
         webots,
         rviz,
         robot_state_publisher,

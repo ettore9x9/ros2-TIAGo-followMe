@@ -5,6 +5,9 @@ controller_manager:
     diffdrive_controller:
       type: diff_drive_controller/DiffDriveController
 
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
@@ -32,3 +35,14 @@ joint_state_broadcaster:
       - head_1_joint
       - head_2_joint
       - torso_lift_joint
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - head_2_joint
+
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+    allow_partial_joints_goal: True
