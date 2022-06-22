@@ -42,9 +42,6 @@ class Controller(Node):
     self.y = data.y
     self.depth = data.z
 
-    # Display the message on the console
-    #self.get_logger().info('Receiving control input')
-
   def publisher_cmd(self):
 
   	if self.data_received == 1:

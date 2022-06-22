@@ -70,6 +70,7 @@ class ImageSubscriber(Node):
     
     faces = self.face_cascade_front.detectMultiScale(gray, 1.1, 4)
 
+    # if no faces are detected, the training model becomes profile faces
     if len(faces) == 0 :
       faces = self.face_cascade_profile.detectMultiScale(gray, 1.1, 4)
 
@@ -78,8 +79,10 @@ class ImageSubscriber(Node):
       msg.header = data.header
       msg.point.x = x+w/2
       msg.point.y = y+h/2
-      self.publisher_centroid.publish(msg)
       self.get_logger().info('Centroid Pixel Coordinates = [' + str(msg.point.x) + ', ' + str(msg.point.y) + ']')
+      self.publisher_centroid.publish(msg)
+      
+
 
     cv2.rectangle(gray, (int(msg.point.x),int(msg.point.y)), (int(msg.point.x)+1, int(msg.point.y)+1), (255, 0, 0), 2)
 
