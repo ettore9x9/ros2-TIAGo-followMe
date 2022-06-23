@@ -1,8 +1,11 @@
 import rclpy # Python library for ROS 2
 from simple_pid import PID
 import time
+import numpy as np
 from rclpy.node import Node # Handles the creation of nodes
 from geometry_msgs.msg import Point, Twist
+from trajectory_msgs.msg import JointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
 
 class Controller(Node):
 
@@ -24,15 +27,29 @@ class Controller(Node):
       self.control_cb, 
       10)
 
+
     self.cmd_vel_publisher = self.create_publisher(Twist, "des_cmd_vel", 1)
+    self.cmd_vel_joint_publisher = self.create_publisher(JointTrajectory, "/joint_trajectory_controller/joint_trajectory", 1)
+
 
     self.timer = self.create_timer(0.01, self.publisher_cmd)
 
     self.pid_distance = PID(-1, 0, -2, setpoint=2)
+
     self.pid_orientation = PID(0.004, 0, 0.008, setpoint=320)
+
+    self.pid_y_rotation = PID(0.004, 0, 0.008, setpoint=240)
 
     self.msg = Twist()
 
+    self.msg_joint = JointTrajectory()
+    self.msg_joint.joint_names = ["head_2_joint"]
+
+    self.traj_points = JointTrajectoryPoint()
+    #self.traj_points.positions = [3.14/2]
+    self.traj_points.time_from_start.sec = 0
+
+    
   def control_cb(self, data):
     """
     Callback function.
@@ -42,21 +59,33 @@ class Controller(Node):
     self.y = data.y
     self.depth = data.z
 
+
   def publisher_cmd(self):
 
-  	if self.data_received == 1:
+    if self.data_received == 1:
 
-  		self.msg.linear.x = float(self.pid_distance(self.depth))
-  		self.msg.angular.z = float(self.pid_orientation(self.x))
-  		self.data_received = 0
+      self.msg.linear.x = float(self.pid_distance(self.depth))
+      self.msg.angular.z = float(self.pid_orientation(self.x))
 
-  	else:
-  		self.msg.linear.x = self.msg.linear.x * 0.8
-  		self.msg.angular.z = self.msg.angular.z * 0.8
 
-  	self.cmd_vel_publisher.publish(self.msg)
-  	self.get_logger().info('Control Errors [' + str(self.x - 320) +  ' [px], ' + str(round(self.depth - 2, 4)) + ' [m] ]')
+      self.traj_points.velocities = [float(self.pid_y_rotation(self.y))]
 
+      self.msg_joint.points = [self.traj_points]
+
+      print("aaaaaaa         " + str(self.traj_points.velocities))
+
+      self.data_received = 0
+
+    else:
+      self.msg.linear.x = self.msg.linear.x * 0.8
+      self.msg.angular.z = self.msg.angular.z * 0.8
+
+    self.cmd_vel_publisher.publish(self.msg)
+    self.cmd_vel_joint_publisher.publish(self.msg_joint)
+
+    self.get_logger().info('Control y Error [' + str(self.y - 240) +  ' [px]')
+    self.get_logger().info('Control Errors [' + str(self.x - 320) +  ' [px], ' + str(round(self.depth - 2, 4)) + ' [m] ]')
+    
 
 def main(args=None):
   
