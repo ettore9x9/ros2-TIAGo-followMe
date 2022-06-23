@@ -32,7 +32,7 @@ def generate_launch_description():
     controller = Node(
         package='tiago_nodes',
         executable='controller',
-        #prefix=["lxterminal --geometry=120x30%s -e"],
+        prefix=["lxterminal --geometry=120x30%s -e"],
     )
 
     obstacle_avoidance = Node(
