@@ -33,12 +33,13 @@ class Controller(Node):
 
 
     self.timer = self.create_timer(0.01, self.publisher_cmd)
+    self.timer2 = self.create_timer(0.01, self.head_angle)
 
     self.pid_distance = PID(-1, 0, -2, setpoint=2)
 
     self.pid_orientation = PID(0.004, 0, 0.008, setpoint=320)
 
-    self.pid_y_rotation = PID(0.004, 0, 0.008, setpoint=240)
+    # self.pid_y_rotation = PID(0.004, 0, 0.008, setpoint=240)
 
     self.msg = Twist()
 
@@ -46,8 +47,9 @@ class Controller(Node):
     self.msg_joint.joint_names = ["head_2_joint"]
 
     self.traj_points = JointTrajectoryPoint()
-    #self.traj_points.positions = [3.14/2]
     self.traj_points.time_from_start.sec = 0
+    self.traj_points.velocities = [0.1]
+    self.traj_points.positions = [0.1]
 
     
   def control_cb(self, data):
@@ -59,6 +61,14 @@ class Controller(Node):
     self.y = data.y
     self.depth = data.z
 
+  def head_angle(self):
+
+    if self.y <= 160 and self.depth < 3.2 and self.depth > 0.5:
+      self.traj_points.positions = [0.3]
+
+    elif self.y > 180 and self.y <= 340 and self.depth > 3.4:
+      self.traj_points.positions = [0.1]
+
 
   def publisher_cmd(self):
 
@@ -66,24 +76,17 @@ class Controller(Node):
 
       self.msg.linear.x = float(self.pid_distance(self.depth))
       self.msg.angular.z = float(self.pid_orientation(self.x))
-
-
-      self.traj_points.velocities = [float(self.pid_y_rotation(self.y))]
-
       self.msg_joint.points = [self.traj_points]
-
-      print("aaaaaaa         " + str(self.traj_points.velocities))
-
       self.data_received = 0
 
     else:
       self.msg.linear.x = self.msg.linear.x * 0.8
       self.msg.angular.z = self.msg.angular.z * 0.8
+      self.traj_points.velocities = [0.001]
 
     self.cmd_vel_publisher.publish(self.msg)
     self.cmd_vel_joint_publisher.publish(self.msg_joint)
 
-    self.get_logger().info('Control y Error [' + str(self.y - 240) +  ' [px]')
     self.get_logger().info('Control Errors [' + str(self.x - 320) +  ' [px], ' + str(round(self.depth - 2, 4)) + ' [m] ]')
     
 

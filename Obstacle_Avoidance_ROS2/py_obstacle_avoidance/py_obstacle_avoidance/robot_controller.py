@@ -79,20 +79,14 @@ class Controller(Node):
 
     self.vel_x = 0.0
     self.vel_z = 0.0
-    self.last_turn = ''
 
-    self.timer = self.create_timer(0.01, self.follow_wall)
+    self.timer = self.create_timer(0.01, self.collision_avoidance)
+
     # Initialize the LaserScan sensor readings to some large value
     # Values are in meters.
     self.max_distance = 5.0
-    self.crashed = False
 
-    # self.left_dist = self.max_distance # Left
-    # self.leftfront_dist = self.max_distance # Left-front
     self.front_dist = self.max_distance
-    # self.behind_dist = self.max_distance # Behind
-    # self.rightfront_dist = self.max_distance # Right-front
-    # self.right_dist = self.max_distance # Right
  
     ################### ROBOT CONTROL PARAMETERS ##################
 
@@ -118,28 +112,20 @@ class Controller(Node):
     received.
     """
 
-    #self.leftfront_dist = min(msg.ranges[0:35])
-    #self.rightfront_dist = min(msg.ranges[625:660])
-    self.front_dist = min(msg.ranges[310:350])
+    self.front_dist = min(msg.ranges[260:400])
    
     # Logic for following the wall
     # >d means no wall detected by that laser beam
     # <d means an wall was detected by that laser beam
 
-    self.follow_wall()
+    self.collision_avoidance()
    
-  def follow_wall(self):
+  def collision_avoidance(self):
     """
     This method causes the robot to follow the boundary of a wall.
     """
     # Create a geometry_msgs/Twist message
-    msg = Twist()
-    msg.linear.x = 0.0
-    msg.linear.y = 0.0
-    msg.linear.z = 0.0
-    msg.angular.x = 0.0
-    msg.angular.y = 0.0
-    msg.angular.z = 0.0        
+    msg = Twist()      
  
     d = self.dist_thresh_wf
 
@@ -147,54 +133,6 @@ class Controller(Node):
       self.wall_following_state = "1: No obstacles detected"
       msg.linear.x = self.vel_x
       msg.angular.z = self.vel_z
-      print("self.vel_x = " + str(self.vel_x))
-      print("self.vel_z = " + str(self.vel_z))
-
-    #   if self.vel_x < 0.000001 and self.vel_z < 0.000001 and self.last_turn == 'left':
-    #     # search for target
-    #     msg.linear.x = self.vel_x
-    #     msg.angular.z = -self.turning_speed_wf_fast
-    #   if self.vel_x < 0.000001 and self.vel_z < 0.000001 and self.last_turn == 'right':
-    #     # search for target
-    #     msg.linear.x = self.vel_x
-    #     msg.angular.z = self.turning_speed_wf_fast
-
-    # if self.front_dist > d and (self.leftfront_dist < d or self.rightfront_dist < d):
-    #   self.wall_following_state = "2: Obstacle sidewards"
-    #   msg.linear.x = self.forward_speed
-    #   if self.rightfront_dist < d:
-    #     msg.angular.z = self.turning_speed_wf_fast
-    #   elif self.leftfront_dist < d:
-    #     msg.angular.z = -self.turning_speed_wf_fast
-  
-    # elif self.front_dist > d and self.leftfront_dist > d and self.rightfront_dist < d:
-    #   self.wall_following_state = "3: turn left"
-    #   msg.linear.x = self.vel_x
-    #   msg.angular.z = self.turning_speed_wf_fast 
-    #   self.last_turn = 'left'     
-  
-    # elif self.front_dist > d and self.leftfront_dist < d and self.rightfront_dist > d:
-    #   self.wall_following_state = "4: turn right"
-    #   msg.linear.x = self.vel_x
-    #   msg.angular.z = -self.turning_speed_wf_fast
-    #   self.last_turn = 'right'
-  
-    # elif self.front_dist < d and self.leftfront_dist > d and self.rightfront_dist < d:
-    #   self.wall_following_state = "5: turn left"
-    #   msg.linear.x = 0.0
-    #   msg.angular.z = self.turning_speed_wf_fast
-    #   self.last_turn = 'left'
-  
-    # elif self.front_dist < d and self.leftfront_dist < d and self.rightfront_dist > d:
-    #   self.wall_following_state = "6: turn right"
-    #   msg.linear.x = 0.0
-    #   msg.angular.z = -self.turning_speed_wf_fast
-    #   self.last_turn = 'right'
-  
-    # elif self.front_dist < d and self.leftfront_dist < d and self.rightfront_dist < d:
-    #   self.wall_following_state = "7: obstacles detected everywhere"
-    #   msg.linear.x = 0.0
-    #   msg.angular.z = 0.0
 
     else:
       self.wall_following_state = "2: Obstacles detected at " + str(round(self.front_dist, 3)) + " meters in front of the robot."
@@ -204,7 +142,7 @@ class Controller(Node):
     # Send velocity command to the robot
 
     self.publisher_.publish(msg)  
-    print(str(self.front_dist))
+    
     # Send robot state information in terminal
     self.get_logger().info('State: "%s"' % self.wall_following_state)
     
