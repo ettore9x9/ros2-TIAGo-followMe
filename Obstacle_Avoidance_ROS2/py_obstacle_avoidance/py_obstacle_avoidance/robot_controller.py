@@ -49,8 +49,11 @@ class Controller(Node):
     ##################### ROS SETUP ####################################################
     # Initiate the Node class's constructor and give it a name
     super().__init__('Controller')
- 
 
+    # Create a subscriber
+    # This node subscribes to messages of type 
+    # Twist. 
+    # These are the desired command velocities for centroid tracking
     self.subscription = self.create_subscription(
                         Twist,
                         'des_cmd_vel',
@@ -68,30 +71,23 @@ class Controller(Node):
                            10)
                             
     # Create a publisher
-    # This node publishes the desired linear and angular velocity of the robot (in the
-    # robot chassis coordinate frame) to the /demo/cmd_vel topic. Using the diff_drive
-    # plugin enables the robot model to read this /demo/cmd_vel topic and execute
-    # the motion accordingly.
+    # This node publishes the linear and angular velocity of the robot.
     self.publisher_ = self.create_publisher(
                       Twist, 
                       '/cmd_vel', 
                       10)
 
+    # Desired linear and angular velocities for centroid tracking
     self.vel_x = 0.0
     self.vel_z = 0.0
 
+    # Increment the frequency of the self.collision_avoidance execution
     self.timer = self.create_timer(0.01, self.collision_avoidance)
 
     # Initialize the LaserScan sensor readings to some large value
     # Values are in meters.
     self.max_distance = 5.0
-
     self.front_dist = self.max_distance
- 
-    ################### ROBOT CONTROL PARAMETERS ##################
-
-    # Maximum forward speed of the robot in meters per second
-    # Any faster than this and the robot risks falling over.
 
  
     ############# OBSTALCE AVOIDANCE PARAMETERS #######################     
@@ -100,9 +96,10 @@ class Controller(Node):
     # We want to try to keep within this distance from the wall.
     self.dist_thresh_wf = 1.1 # meters  
 
-    # We don't want to get too close to the wall though.
- 
   def update_desired_vel(self, msg):
+    """
+    This method updates both linear and angular velocities for centroid tracking
+    """
     self.vel_x = msg.linear.x
     self.vel_z = msg.angular.z
  
@@ -111,13 +108,7 @@ class Controller(Node):
     This method gets called every time a LaserScan message is 
     received.
     """
-
     self.front_dist = min(msg.ranges[260:400])
-   
-    # Logic for following the wall
-    # >d means no wall detected by that laser beam
-    # <d means an wall was detected by that laser beam
-
     self.collision_avoidance()
    
   def collision_avoidance(self):
@@ -125,10 +116,14 @@ class Controller(Node):
     This method causes the robot to follow the boundary of a wall.
     """
     # Create a geometry_msgs/Twist message
-    msg = Twist()      
- 
+    msg = Twist()   
+
+    # Logic for following the wall
+    # >d means no wall detected by that laser beam
+    # <d means an wall was detected by that laser beam
     d = self.dist_thresh_wf
 
+    # Only data front laser scan data are evaluated so as to avoid losing sight of the centroid
     if self.front_dist > d:
       self.wall_following_state = "1: No obstacles detected"
       msg.linear.x = self.vel_x
@@ -140,10 +135,9 @@ class Controller(Node):
       msg.angular.z = self.vel_z
     
     # Send velocity command to the robot
-
     self.publisher_.publish(msg)  
     
-    # Send robot state information in terminal
+    # Print robot state information in terminal
     self.get_logger().info('State: "%s"' % self.wall_following_state)
     
 def main(args=None):

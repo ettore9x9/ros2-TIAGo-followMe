@@ -11,9 +11,9 @@ class Controller(Node):
 
   def __init__(self):
     """
-    Class constructor to set up the node
+    Class constructor to set up the node.
     """
-    # Initiate the Node class's constructor and give it a name
+    # Initiate the Node class's constructor and give it a name.
     super().__init__('controller')
 
     self.data_received = 0
@@ -21,31 +21,45 @@ class Controller(Node):
     self.y = 0
     self.depth = 0
 
+    # Create subscription
+    # This node subscribes to the centroid depth and pixel coordinates that are measured by the kinect RGBD camera.
     self.sub_control_input = self.create_subscription(
       Point, 
       '/TIAGo_Iron/control_msgs', 
       self.control_cb, 
       10)
 
-
+    # Create publisher
+    # This node publishes the desired linear and angular command velocity that the robot wheels shouls have in order 
+    # to keep tracking of the centroid.
     self.cmd_vel_publisher = self.create_publisher(Twist, "des_cmd_vel", 1)
+
+    # Create publisher
+    # This node publishes the desired tilt head joint trajectory in order to keep tracking the centroid 
     self.cmd_vel_joint_publisher = self.create_publisher(JointTrajectory, "/joint_trajectory_controller/joint_trajectory", 1)
 
-
+    # Increase Hertz execution.
     self.timer = self.create_timer(0.01, self.publisher_cmd)
     self.timer2 = self.create_timer(0.01, self.head_angle)
 
+    # Implementing the two PD controllers for the centroid tracking
+
+    # Depth PD controller
+    # The robot should keep a 2m distance from target (centroid)
     self.pid_distance = PID(-1, 0, -2, setpoint=2)
 
+    # Orientation PD controller
+    # The x centroid coordinate should be the half the the image width 
     self.pid_orientation = PID(0.004, 0, 0.008, setpoint=320)
 
-    # self.pid_y_rotation = PID(0.004, 0, 0.008, setpoint=240)
-
+    # Message for publishing the desired command velocity
     self.msg = Twist()
 
+    # Message for publishing the desired head joint trajectory
     self.msg_joint = JointTrajectory()
-    self.msg_joint.joint_names = ["head_2_joint"]
 
+    # Populating the trajectory messages fields
+    self.msg_joint.joint_names = ["head_2_joint"]
     self.traj_points = JointTrajectoryPoint()
     self.traj_points.time_from_start.sec = 0
     self.traj_points.velocities = [0.1]
@@ -57,33 +71,46 @@ class Controller(Node):
     Callback function.
     """
     self.data_received = 1
+    # Reading the centroid coordinates and depth.
     self.x = data.x
     self.y = data.y
     self.depth = data.z
 
   def head_angle(self):
+    """
+    This method makes some simple joint head movement.  
+    """
 
+    # The y coordinates is on top of the image and TIAGo is pretty close to the target
     if self.y <= 160 and self.depth < 3.2 and self.depth > 0.5:
-      self.traj_points.positions = [0.3]
 
+      self.traj_points.positions = [0.3]  # Raises TIAGo's head
+
+    # The y coordinates is in the middle the image and TIAGo is pretty far from the target
     elif self.y > 180 and self.y <= 340 and self.depth > 3.4:
-      self.traj_points.positions = [0.1]
+
+      self.traj_points.positions = [0.1]  # Alligns TIAGo's head
 
 
   def publisher_cmd(self):
 
     if self.data_received == 1:
 
+
+      # Setting the desired velocities and trajectories.
       self.msg.linear.x = float(self.pid_distance(self.depth))
       self.msg.angular.z = float(self.pid_orientation(self.x))
       self.msg_joint.points = [self.traj_points]
       self.data_received = 0
 
     else:
+      # If no data is received due to Image Processing scattering glitches the robot can 
+      # keep the 80% of the previous velocity commands.
       self.msg.linear.x = self.msg.linear.x * 0.8
       self.msg.angular.z = self.msg.angular.z * 0.8
-      self.traj_points.velocities = [0.001]
+      self.traj_points.velocities = [0.08]
 
+    # Publishing the desired velocities and trajectories.
     self.cmd_vel_publisher.publish(self.msg)
     self.cmd_vel_joint_publisher.publish(self.msg_joint)
 

@@ -1,7 +1,6 @@
-# Basic ROS 2 program to subscribe to real-time streaming 
-# video from your built-in webcam
 # Author:
 # - Addison Sears-Collins
+# - Edited by: Pagano, Predieri, Sani
 # - https://automaticaddison.com
   
 # Import the necessary libraries
@@ -25,22 +24,21 @@ class ImageSubscriber(Node):
     # Initiate the Node class's constructor and give it a name
     super().__init__('image_subscriber')
       
-    # Create the subscriber. This subscriber will receive an Image
-    # from the video_frames topic. The queue size is 10 messages.
+    # Create the subscriber. This subscriber will receive a ROS Image
+    # from the 'kinect_color' topic. The queue size is 10 messages.
     self.subscription = self.create_subscription(
       Image, 
       'kinect_color', 
       self.listener_callback, 
       10)
-    self.subscription # prevent unused variable warning
+    self.subscription # prevent unused variable warning.
 
+    # Create publisher
+    # This node publishes the centroid pixel coordinates.
     self.publisher_centroid = self.create_publisher(PointStamped, 'centroid', 1)
       
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
-
-    # self.hog = cv2.HOGDescriptor()
-    # self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
     self.out = cv2.VideoWriter(
         'output.avi',
@@ -48,6 +46,7 @@ class ImageSubscriber(Node):
         15.,
         (640,480))
 
+    # Importing some pretrained face detection models.
     self.face_cascade_front = cv2.CascadeClassifier('./src/cv_basics/cv_basics/haarcascade_frontalface_alt2.xml')
     self.face_cascade_profile = cv2.CascadeClassifier('./src/cv_basics/cv_basics/haarcascade_profile.xml')
 
@@ -55,35 +54,37 @@ class ImageSubscriber(Node):
     """
     Callback function.
     """
+    # Message to be published
     msg = PointStamped()
-    # Display the message on the console
-    # self.get_logger().info('Receiving video frame')
  
-    # Convert ROS Image message to OpenCV image
+    # Convert ROS Image message to OpenCV image.
     current_frame = self.br.imgmsg_to_cv2(data)
 
-    # resizing for faster detection
+    # Resizing for faster detection.
     frame = cv2.resize(current_frame, (640, 480)) # righe x colonne
 
-    # using a greyscale picture, also for faster detection
+    # Using a greyscale picture, also for faster detection.
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
     
+    # Detected faces are put into rectangles.
     faces = self.face_cascade_front.detectMultiScale(gray, 1.1, 4)
 
-    # if no faces are detected, the training model becomes profile faces
+    # If no faces are detected, the training model becomes the face profiles. 
     if len(faces) == 0 :
       faces = self.face_cascade_profile.detectMultiScale(gray, 1.1, 4)
 
+
     for (x, y, w, h) in faces:
-      cv2.rectangle(gray, (x, y), (x+w, y+h), (255, 0, 0), 2)
-      msg.header = data.header
-      msg.point.x = x+w/2
-      msg.point.y = y+h/2
+
+      cv2.rectangle(gray, (x, y), (x+w, y+h), (255, 0, 0), 2)   # Create the rectangle that will highlight the detected face.
+      msg.header = data.header                                  # Populating the header field for timestamp comparison.
+      msg.point.x = x+w/2                                       # x centroid coordinate
+      msg.point.y = y+h/2                                       # y centroid coordinate
       self.get_logger().info('Centroid Pixel Coordinates = [' + str(msg.point.x) + ', ' + str(msg.point.y) + ']')
+      # Publishing the message
       self.publisher_centroid.publish(msg)
       
-
-
+    # Highlighting the centroid with a tiny rectangle in the centre of the face rectangle   
     cv2.rectangle(gray, (int(msg.point.x),int(msg.point.y)), (int(msg.point.x)+1, int(msg.point.y)+1), (255, 0, 0), 2)
 
     # Write the output video 
