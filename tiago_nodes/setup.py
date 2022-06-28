@@ -22,8 +22,7 @@ setup(
     entry_points={
         'console_scripts': [
             'depth_finder = tiago_nodes.depth_finder:main',
-            'controller = tiago_nodes.controller:main',
-
+            'pid_controller = tiago_nodes.pid_controller:main',
         ],
     },
 )

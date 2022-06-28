@@ -17,26 +17,30 @@ def generate_launch_description():
 
     cv_basics = Node(
         package='cv_basics',
-        namespace='TIAGo_Iron',
+        namespace='follow_object',
         executable='img_subscriber',
         prefix=["lxterminal --geometry=120x30%s -e"],
+        remappings=[('/color_camera', '/TIAGo_Iron/kinect_color')]
     )
 
     depth_finder = Node(
         package='tiago_nodes',
-        namespace='TIAGo_Iron',
+        namespace='follow_object',
         executable='depth_finder',
         prefix=["lxterminal --geometry=120x30%s -e"],
+        remappings=[('/range_camera', '/TIAGo_Iron/kinect_range')]
     )
 
-    controller = Node(
+    pid_controller = Node(
         package='tiago_nodes',
-        executable='controller',
+        namespace='follow_object',
+        executable='pid_controller',
         prefix=["lxterminal --geometry=120x30%s -e"],
     )
 
     obstacle_avoidance = Node(
         package='py_obstacle_avoidance',
+        namespace='follow_object',
         executable='robot_controller',
         prefix=["lxterminal --geometry=120x30%s -e"],
     )
@@ -45,6 +49,6 @@ def generate_launch_description():
         tiagosim,
         cv_basics,
         depth_finder,
-        controller,
+        pid_controller,
         obstacle_avoidance,
     ])

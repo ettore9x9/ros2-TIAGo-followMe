@@ -7,6 +7,8 @@ from geometry_msgs.msg import Point, Twist
 from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
 
+from interfaces.srv import ProcessPoint
+
 class Controller(Node):
 
   def __init__(self):
@@ -14,33 +16,32 @@ class Controller(Node):
     Class constructor to set up the node.
     """
     # Initiate the Node class's constructor and give it a name.
-    super().__init__('controller')
+    super().__init__('pid_controller')
 
-    self.data_received = 0
+    self.y = 0.0
+    self.depth = 5.0
     self.x = 0
-    self.y = 0
-    self.depth = 0
 
     # Create subscription
     # This node subscribes to the centroid depth and pixel coordinates that are measured by the kinect RGBD camera.
-    self.sub_control_input = self.create_subscription(
-      Point, 
-      '/TIAGo_Iron/control_msgs', 
-      self.control_cb, 
-      10)
+    # self.sub_control_input = self.create_subscription(
+    #   Point, 
+    #   '/TIAGo_Iron/control_msgs', 
+    #   self.control_cb, 
+    #   10)
 
     # Create publisher
     # This node publishes the desired linear and angular command velocity that the robot wheels shouls have in order 
     # to keep tracking of the centroid.
-    self.cmd_vel_publisher = self.create_publisher(Twist, "des_cmd_vel", 1)
+    # self.cmd_vel_publisher = self.create_publisher(Twist, "des_cmd_vel", 1)
 
     # Create publisher
     # This node publishes the desired tilt head joint trajectory in order to keep tracking the centroid 
-    self.cmd_vel_joint_publisher = self.create_publisher(JointTrajectory, "/joint_trajectory_controller/joint_trajectory", 1)
+    self.cmd_vel_joint_publisher = self.create_publisher(JointTrajectory, "/command_pose_head", 1)
 
     # Increase Hertz execution.
-    self.timer = self.create_timer(0.01, self.publisher_cmd)
-    self.timer2 = self.create_timer(0.01, self.head_angle)
+    # self.timer = self.create_timer(0.01, self.publisher_cmd)
+    self.timer = self.create_timer(0.1, self.head_angle)
 
     # Implementing the two PD controllers for the centroid tracking
 
@@ -65,16 +66,22 @@ class Controller(Node):
     self.traj_points.velocities = [0.1]
     self.traj_points.positions = [0.1]
 
+    self.srv = self.create_service(ProcessPoint, 'des_vel', self.control_cb)
+
     
-  def control_cb(self, data):
+  def control_cb(self, req, res):
     """
     Callback function.
     """
-    self.data_received = 1
     # Reading the centroid coordinates and depth.
-    self.x = data.x
-    self.y = data.y
-    self.depth = data.z
+    self.x = req.centroid.x
+    self.y = req.centroid.y
+    self.depth = req.centroid.z
+
+    # Setting the desired velocities and trajectories.
+    res.desired_velocities.linear.x = float(self.pid_distance(self.depth))
+    res.desired_velocities.angular.z = float(self.pid_orientation(self.x))
+    return res
 
   def head_angle(self):
     """
@@ -91,31 +98,10 @@ class Controller(Node):
 
       self.traj_points.positions = [0.1]  # Alligns TIAGo's head
 
-
-  def publisher_cmd(self):
-
-    if self.data_received == 1:
-
-
-      # Setting the desired velocities and trajectories.
-      self.msg.linear.x = float(self.pid_distance(self.depth))
-      self.msg.angular.z = float(self.pid_orientation(self.x))
-      self.msg_joint.points = [self.traj_points]
-      self.data_received = 0
-
-    else:
-      # If no data is received due to Image Processing scattering glitches the robot can 
-      # keep the 80% of the previous velocity commands.
-      self.msg.linear.x = self.msg.linear.x * 0.8
-      self.msg.angular.z = self.msg.angular.z * 0.8
-      self.traj_points.velocities = [0.08]
-
-    # Publishing the desired velocities and trajectories.
-    self.cmd_vel_publisher.publish(self.msg)
+    self.msg_joint.points = [self.traj_points]
     self.cmd_vel_joint_publisher.publish(self.msg_joint)
 
     self.get_logger().info('Control Errors [' + str(self.x - 320) +  ' [px], ' + str(round(self.depth - 2, 4)) + ' [m] ]')
-    
 
 def main(args=None):
   

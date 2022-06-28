@@ -1,0 +1,5 @@
+geometry_msgs/Point centroid
+
+---
+
+geometry_msgs/Twist desired_velocities

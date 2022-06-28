@@ -85,7 +85,8 @@ def generate_launch_description():
             ros2_control_params
         ],
         remappings=[
-            ('/diffdrive_controller/cmd_vel_unstamped', '/cmd_vel')
+            ('/diffdrive_controller/cmd_vel_unstamped', '/cmd_vel'),
+            ('/joint_trajectory_controller/joint_trajectory', '/command_pose_head')
         ]
     )
 

@@ -6,6 +6,8 @@ import cv2 # OpenCV library
 import numpy as np
 from geometry_msgs.msg import PointStamped
 from geometry_msgs.msg import Point
+from interfaces.srv import SendPoint
+
 
 class DepthFinder(Node):
   """
@@ -20,13 +22,12 @@ class DepthFinder(Node):
     super().__init__('depth_finder')
 
     self.buffer = []
-    self.ctrl_input = Point()
       
     # Create the subscriber. This subscriber will receive a ROS Image
     # from the kinect.
     self.sub_range = self.create_subscription(
       Image, 
-      '/TIAGo_Iron/kinect_range', 
+      '/range_camera',
       self.range_cb, 
       10)
 
@@ -34,13 +35,13 @@ class DepthFinder(Node):
     # point with the centroid coordinates in pixel.
     self.sub_centroid = self.create_subscription(
       PointStamped, 
-      '/TIAGo_Iron/centroid', 
+      '/face_centre', 
       self.centroid_cb, 
       10)
 
     # Create a publisher
     # This node publishes the centroid depth and pixel coordinates as a Point message.
-    self.ctrl_publisher = self.create_publisher(Point, "control_msgs", 1)
+    # self.ctrl_publisher = self.create_publisher(Point, "control_msgs", 1)
       
     # Used to convert between ROS and OpenCV images.
     self.br = CvBridge()
@@ -50,6 +51,15 @@ class DepthFinder(Node):
         cv2.VideoWriter_fourcc(*'MJPG'),
         15.,
         (640,480))
+
+    self.cli = self.create_client(SendPoint, 'centroid')
+    while not self.cli.wait_for_service(timeout_sec=1.0):
+      self.get_logger().info('service not available, waiting again...')
+
+    self.ctrl_input = SendPoint.Request()
+    self.client_futures = []
+
+    self.spin()
 
   def range_cb(self, data):
     """
@@ -85,20 +95,37 @@ class DepthFinder(Node):
             frame = cv2.resize(current_frame, (640, 480))
 
             # Centroid coordinates.
-            self.ctrl_input.x = msg.point.x
-            self.ctrl_input.y = msg.point.y
+            self.ctrl_input.centroid.x = msg.point.x
+            self.ctrl_input.centroid.y = msg.point.y
             # Centroid depth
-            self.ctrl_input.z = float(frame[int(msg.point.y), int(msg.point.x)])
+            self.ctrl_input.centroid.z = float(frame[int(msg.point.y), int(msg.point.x)])
 
-            # Publishing the centroid pixel coordinates and depth as a Point message.
-            self.ctrl_publisher.publish(self.ctrl_input)
+            # # Publishing the centroid pixel coordinates and depth as a Point message.
+            # self.ctrl_publisher.publish(self.ctrl_input)
 
-            self.get_logger().info('Centroid Depth = ' + str(round(self.ctrl_input.z, 4)) + ' [m]')
+            self.get_logger().info('Centroid Depth = ' + str(round(self.ctrl_input.centroid.z, 4)) + ' [m]')
+
+            self.client_futures.append(self.cli.call_async(self.ctrl_input))
+
+            #rclpy.spin_until_future_complete(self, self.future)
 
             return
 
         if msg_nsec > image_nsec:
             self.buffer.pop(0)
+
+  def spin(self):
+    while rclpy.ok():
+      rclpy.spin_once(self)
+      incomplete_futures = []
+      for f in self.client_futures:
+        if f.done():
+          res = f.result()
+          self.get_logger().info('Service SendPoint response:' + str(res.check))
+        else:
+          incomplete_futures.append(f)
+      self.client_futures = incomplete_futures
+
 
 
 def main(args=None):

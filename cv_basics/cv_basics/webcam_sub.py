@@ -28,14 +28,14 @@ class ImageSubscriber(Node):
     # from the 'kinect_color' topic. The queue size is 10 messages.
     self.subscription = self.create_subscription(
       Image, 
-      'kinect_color', 
+      '/color_camera', 
       self.listener_callback, 
       10)
     self.subscription # prevent unused variable warning.
 
     # Create publisher
     # This node publishes the centroid pixel coordinates.
-    self.publisher_centroid = self.create_publisher(PointStamped, 'centroid', 1)
+    self.publisher_centroid = self.create_publisher(PointStamped, '/face_centre', 1)
       
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
