@@ -40,6 +40,7 @@ class ImageSubscriber(Node):
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
 
+    # Used to print the output on screen.
     self.out = cv2.VideoWriter(
         'output.avi',
         cv2.VideoWriter_fourcc(*'MJPG'),

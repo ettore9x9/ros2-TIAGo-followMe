@@ -5,7 +5,6 @@ from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Image
 import cv2 # OpenCV library
 import numpy as np
 from geometry_msgs.msg import PointStamped
-from geometry_msgs.msg import Point
 from interfaces.srv import SendPoint
 
 
@@ -21,7 +20,7 @@ class DepthFinder(Node):
     # Initiate the Node class's constructor and give it a name.
     super().__init__('depth_finder')
 
-    self.buffer = []
+    self.buffer = []   # Buffer to store all received images from the depth camera.
       
     # Create the subscriber. This subscriber will receive a ROS Image
     # from the kinect.
@@ -38,38 +37,32 @@ class DepthFinder(Node):
       '/face_centre', 
       self.centroid_cb, 
       10)
-
-    # Create a publisher
-    # This node publishes the centroid depth and pixel coordinates as a Point message.
-    # self.ctrl_publisher = self.create_publisher(Point, "control_msgs", 1)
       
     # Used to convert between ROS and OpenCV images.
     self.br = CvBridge()
 
-    self.out = cv2.VideoWriter(
-        'output.avi',
-        cv2.VideoWriter_fourcc(*'MJPG'),
-        15.,
-        (640,480))
-
+    # Create a client to the centroid service, to send the centroid position and depth to the 
+    # robot_controller node.
     self.cli = self.create_client(SendPoint, 'centroid')
+
+    # Wait until the service is available.
     while not self.cli.wait_for_service(timeout_sec=1.0):
       self.get_logger().info('service not available, waiting again...')
 
-    self.ctrl_input = SendPoint.Request()
-    self.client_futures = []
+    self.ctrl_input = SendPoint.Request()   # Service request.
+    self.client_futures = []                # Buffer to store service responses.
 
+    # Calls the spin function to output asynchronously the service responses.
     self.spin()
-
+    
   def range_cb(self, data):
     """
     Callback function.
     """
-
     # Stores all the frame images that are received in order to compare the timestamps at a later time.
     self.buffer.append(data)
 
-    # Pop the last stored image if the buffer size gets too big.
+    # Pop the first stored image if the buffer size gets too big.
     if len(self.buffer) > 100:
         self.buffer.pop(0)
 
@@ -78,9 +71,10 @@ class DepthFinder(Node):
     """
     Callback function.
     """
-
+    # Compute the header time of the message.
     msg_nsec = msg.header.stamp.nanosec + 1000000000 * msg.header.stamp.sec
- 
+    
+    # Search in the image buffer the one with the same header time stamp.
     for image in self.buffer:
         # Cycling into the frames buffer.
         image_nsec = image.header.stamp.nanosec + 1000000000 * image.header.stamp.sec
@@ -97,34 +91,33 @@ class DepthFinder(Node):
             # Centroid coordinates.
             self.ctrl_input.centroid.x = msg.point.x
             self.ctrl_input.centroid.y = msg.point.y
-            # Centroid depth
+            # Centroid depth.
             self.ctrl_input.centroid.z = float(frame[int(msg.point.y), int(msg.point.x)])
-
-            # # Publishing the centroid pixel coordinates and depth as a Point message.
-            # self.ctrl_publisher.publish(self.ctrl_input)
 
             self.get_logger().info('Centroid Depth = ' + str(round(self.ctrl_input.centroid.z, 4)) + ' [m]')
 
+            # Send a client request with the centroid's coordinates and depth.
             self.client_futures.append(self.cli.call_async(self.ctrl_input))
-
-            #rclpy.spin_until_future_complete(self, self.future)
-
             return
 
+        # If the image in the buffer is older than the message, removes it.
         if msg_nsec > image_nsec:
             self.buffer.pop(0)
 
   def spin(self):
+    """
+    Print on screen the result of the service call.
+    """
     while rclpy.ok():
       rclpy.spin_once(self)
-      incomplete_futures = []
-      for f in self.client_futures:
-        if f.done():
-          res = f.result()
+      incomplete_futures = []                    # Initialize a buffer.
+      for f in self.client_futures:              # For every service request.
+        if f.done():                             # If the response has arrived.
+          res = f.result()                       # Gets the service response.
           self.get_logger().info('Service SendPoint response:' + str(res.check))
         else:
-          incomplete_futures.append(f)
-      self.client_futures = incomplete_futures
+          incomplete_futures.append(f)           # The service has not received a response yet.
+      self.client_futures = incomplete_futures   # Refresh the service requests.
 
 
 
