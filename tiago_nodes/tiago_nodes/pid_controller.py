@@ -15,57 +15,45 @@ class Controller(Node):
     """
     Class constructor to set up the node.
     """
+
     # Initiate the Node class's constructor and give it a name.
     super().__init__('pid_controller')
 
     self.y = 0.0
     self.depth = 5.0
-    self.x = 0
+    self.x = 0.0
 
-    # Create subscription
-    # This node subscribes to the centroid depth and pixel coordinates that are measured by the kinect RGBD camera.
-    # self.sub_control_input = self.create_subscription(
-    #   Point, 
-    #   '/TIAGo_Iron/control_msgs', 
-    #   self.control_cb, 
-    #   10)
-
-    # Create publisher
-    # This node publishes the desired linear and angular command velocity that the robot wheels shouls have in order 
-    # to keep tracking of the centroid.
-    # self.cmd_vel_publisher = self.create_publisher(Twist, "des_cmd_vel", 1)
-
-    # Create publisher
-    # This node publishes the desired tilt head joint trajectory in order to keep tracking the centroid 
+    # Create publisher.
+    # This node publishes the desired tilt head joint trajectory in order to keep tracking the centroid .
     self.cmd_vel_joint_publisher = self.create_publisher(JointTrajectory, "/command_pose_head", 1)
 
     # Increase Hertz execution.
-    # self.timer = self.create_timer(0.01, self.publisher_cmd)
     self.timer = self.create_timer(0.1, self.head_angle)
 
-    # Implementing the two PD controllers for the centroid tracking
-
-    # Depth PD controller
-    # The robot should keep a 2m distance from target (centroid)
+    # Implementing the two PD controllers for the centroid tracking.
+    # Depth PD controller.
+    # The robot should keep a 2m distance from target (centroid).
     self.pid_distance = PID(-1, 0, -2, setpoint=2)
 
-    # Orientation PD controller
-    # The x centroid coordinate should be the half the the image width 
+    # Orientation PD controller.
+    # The x centroid coordinate should be the half the the image width (i.e. pixel number 320).
     self.pid_orientation = PID(0.004, 0, 0.008, setpoint=320)
 
-    # Message for publishing the desired command velocity
+    # Message for publishing the desired command velocity.
     self.msg = Twist()
 
-    # Message for publishing the desired head joint trajectory
+    # Message for publishing the desired head joint trajectory.
     self.msg_joint = JointTrajectory()
 
-    # Populating the trajectory messages fields
+    # Populating the trajectory messages fields.
     self.msg_joint.joint_names = ["head_2_joint"]
     self.traj_points = JointTrajectoryPoint()
     self.traj_points.time_from_start.sec = 0
     self.traj_points.velocities = [0.1]
     self.traj_points.positions = [0.1]
 
+    # Create a server of the des_vel service, to process the client (robot_controller.py) request
+    # composed of the centroid position and depth.
     self.srv = self.create_service(ProcessPoint, 'des_vel', self.control_cb)
 
     
@@ -78,7 +66,7 @@ class Controller(Node):
     self.y = req.centroid.y
     self.depth = req.centroid.z
 
-    # Setting the desired velocities and trajectories.
+    # Sending the target tracking required velocities to the client node (robot_controller.py).  
     res.desired_velocities.linear.x = float(self.pid_distance(self.depth))
     res.desired_velocities.angular.z = float(self.pid_orientation(self.x))
     return res
