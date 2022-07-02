@@ -59,7 +59,7 @@ faces = self.face_cascade_front.detectMultiScale(gray, 1.1, 4)
 if len(faces) == 0 :
       faces = self.face_cascade_profile.detectMultiScale(gray, 1.1, 4)
 ```
-Once we have computed the centroid of the rectangle where the face is detected, we decided to publish a _PointStamped_ message with the centroid and it's relative image timestamp (header). This is important because when `depth_finder.py` node will receive the depth information, it will have to combine the image to the right depth (f_datadepth is higher than f_datacentroid because of the image processing), which is our case.
+Once we have computed the centroid of the rectangle where the face is detected, we decided to send a request to depth finder which collects the centroid and answers true, later it matches the centroid with the depth image. This is important because when `depth_finder.py` node will receive the depth information, it will have to combine the image to the right depth (frequency_datadepth is higher than frequency_datacentroid because of the image processing), which is our case.
 
 ### Controlling the robot behaviour (PID control) with a simple idea of obstacle avoidance.
 
@@ -83,3 +83,17 @@ This becomes helpful when approaching different ideas for the obstacle avoidance
 All the values listed were assigned in an hempirical approach.
 
 ## UML Graphs.
+
+We decided to create two different diagrams, one structural and another one behavioural. For the structural we chose the component diagram, while for the behavioural we used the activity diagram.
+
+### Component Diagram
+
+<p align="center">
+<img src="https://github.com/ettore9x9/SOFAR_TIAGo/blob/main/Component%20Diagram.jpeg" width="617" height="500" />
+</p>
+
+### Activity Diagram
+
+<p align="center">
+<img src="https://github.com/ettore9x9/SOFAR_TIAGo/blob/main/Activity%20Diagram.jpeg" width="662" height="1340" />
+</p>
