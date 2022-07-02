@@ -63,7 +63,7 @@ Once we have computed the centroid of the rectangle where the face is detected, 
 
 ### Controlling the robot behaviour (PID control) with a simple idea of obstacle avoidance.
 
-_Packages related_: [__tiagosim__](https://github.com/ettore9x9/SOFAR_TIAGo/tree/main/tiagosim), [Obstacle_Avoidance_ROS2](https://github.com/ettore9x9/SOFAR_TIAGo/tree/main/Obstacle_Avoidance_ROS2).
+_Packages related_: [__tiago_nodes__](https://github.com/ettore9x9/SOFAR_TIAGo/tree/main/tiago_nodes), [Obstacle_Avoidance_ROS2](https://github.com/ettore9x9/SOFAR_TIAGo/tree/main/Obstacle_Avoidance_ROS2).
 
 We want to keep the robot following a target. To do that, the best way to achieve the goal is controlling the robot behaviour with simple tasks. These tasks are:
 
