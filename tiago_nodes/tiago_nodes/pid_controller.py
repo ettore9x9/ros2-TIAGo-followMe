@@ -33,11 +33,11 @@ class Controller(Node):
     # Implementing the two PD controllers for the centroid tracking.
     # Depth PD controller.
     # The robot should keep a 2m distance from target (centroid).
-    self.pid_distance = PID(-1, 0, -2, setpoint=2)
+    self.pid_distance = PID(-0.2, 0, -0.4, setpoint=2)
 
     # Orientation PD controller.
     # The x centroid coordinate should be the half the the image width (i.e. pixel number 320).
-    self.pid_orientation = PID(0.004, 0, 0.008, setpoint=320)
+    self.pid_orientation = PID(0.0008, 0, 0.0016, setpoint=320)
 
     # Message for publishing the desired command velocity.
     self.msg = Twist()
